@@ -1,14 +1,15 @@
 # Screenshots
 
-Add demo screenshots of the running app here (open http://localhost:8000):
+Demo screenshots of the running app (http://localhost:8000).
 
-| File | Suggested content |
-|------|-------------------|
-| `01-home.png`     | Home page — composer form + notes list |
-| `02-create.png`   | A note just created |
-| `03-summary.png`  | A note with its AI summary block shown |
-| `04-search.png`   | Search results with the semantic/keyword badge |
-| `05-docs.png`     | Swagger UI at http://localhost:8000/api/docs |
+| File | Content |
+|------|---------|
+| `01-home.png`             | Home page — header, hero, stat cards, composer form |
+| `02-create-note.png`      | Create-note form filled in |
+| `03-note-created.png`     | Note created — success toast + note card in the list |
+| `04-api-docs.png`         | Swagger UI overview (`/api/docs`) |
+| `05-api-docs-schemas.png` | Swagger UI — schema models |
+| `06-api-docs-endpoint.png`| Swagger UI — `PUT /api/notes/{id}` expanded |
+| `07-api-docs-response.png`| Swagger UI — response example |
 
-On Windows, press **Win + Shift + S** to capture a region, then save it here.
 These images are referenced from the project [README](../README.md).

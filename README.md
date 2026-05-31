@@ -223,7 +223,25 @@ Feature tests cover create + list, update + delete, search, and summary generati
 
 ## 📸 Screenshots
 
-See [`screenshots/`](screenshots/) — home, create, AI summary, search, and Swagger UI.
+**Home — notes dashboard**
+
+![Home](screenshots/01-home.png)
+
+**Create a note**
+
+![Create note](screenshots/02-create-note.png)
+
+**Note created (with toast + list)**
+
+![Note created](screenshots/03-note-created.png)
+
+**Interactive API docs (Swagger UI at `/api/docs`)**
+
+![API docs](screenshots/04-api-docs.png)
+
+![API docs endpoint](screenshots/06-api-docs-endpoint.png)
+
+More shots (schemas, response examples) in [`screenshots/`](screenshots/).
 
 ---
 
