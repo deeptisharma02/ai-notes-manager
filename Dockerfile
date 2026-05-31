@@ -6,8 +6,11 @@ RUN apt-get update && apt-get install -y \
         libzip-dev \
         libonig-dev \
         zip \
-    && docker-php-ext-install pdo pdo_mysql \
+    && docker-php-ext-install pdo pdo_mysql opcache \
     && rm -rf /var/lib/apt/lists/*
+
+# Enable OPcache + realpath cache tuning for fast requests on bind mounts.
+COPY docker/php/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
