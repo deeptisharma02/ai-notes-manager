@@ -1,0 +1,221 @@
+openapi: 3.0.3
+info:
+  title: AI Notes Manager API
+  version: 1.0.0
+  description: >
+    REST API for managing notes with AI-powered semantic search and
+    AI-generated summaries. Built with Laravel. All write endpoints are
+    validated and the API is rate limited to 60 requests/minute per client.
+servers:
+  - url: http://localhost:8000
+    description: Local Docker environment
+tags:
+  - name: Notes
+    description: CRUD, search and AI operations on notes
+
+paths:
+  /api/notes:
+    get:
+      tags: [Notes]
+      summary: List notes (paginated)
+      parameters:
+        - name: page
+          in: query
+          description: Page number
+          schema: { type: integer, default: 1, minimum: 1 }
+        - name: limit
+          in: query
+          description: Items per page (1-100)
+          schema: { type: integer, default: 10, minimum: 1, maximum: 100 }
+      responses:
+        '200':
+          description: A paginated list of notes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Note' }
+                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+    post:
+      tags: [Notes]
+      summary: Create a note
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/NoteInput' }
+      responses:
+        '201':
+          description: Note created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Note' }
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ValidationError' }
+
+  /api/notes/search:
+    get:
+      tags: [Notes]
+      summary: Semantic / keyword search
+      description: >
+        Performs AI semantic search using OpenAI embeddings + cosine similarity
+        when an API key is configured and embeddings exist; otherwise falls back
+        to keyword search. The `source` field indicates which mode ran.
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Search query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 10, minimum: 1, maximum: 100 }
+      responses:
+        '200':
+          description: Matching notes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Note' }
+                  source:
+                    type: string
+                    enum: [semantic, keyword]
+        '422':
+          description: Missing query
+
+  /api/notes/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [Notes]
+      summary: Get a single note
+      responses:
+        '200':
+          description: The note
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Note' }
+        '404': { description: Note not found }
+    put:
+      tags: [Notes]
+      summary: Update a note
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/NoteUpdateInput' }
+      responses:
+        '200':
+          description: Note updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Note' }
+        '404': { description: Note not found }
+        '422': { description: Validation error }
+    delete:
+      tags: [Notes]
+      summary: Delete a note
+      responses:
+        '204': { description: Note deleted (no content) }
+        '404': { description: Note not found }
+
+  /api/notes/{id}/summary:
+    post:
+      tags: [Notes]
+      summary: Generate an AI summary for a note
+      description: >
+        Generates a concise summary of the note content using OpenAI when a key
+        is configured, otherwise a local extractive fallback. The summary is
+        persisted on the note.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Summary generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id: { type: integer, example: 1 }
+                      summary: { type: string, example: 'A short AI-generated summary.' }
+                      source:
+                        type: string
+                        enum: [openai, fallback]
+        '404': { description: Note not found }
+
+components:
+  schemas:
+    Note:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        title: { type: string, example: 'Project kickoff' }
+        content: { type: string, example: 'We discussed the architecture and timeline.' }
+        summary: { type: string, nullable: true, example: 'Discussed architecture and timeline.' }
+        embedding:
+          type: array
+          nullable: true
+          items: { type: number }
+          description: Vector embedding used for semantic search (hidden in most responses)
+        similarity_score:
+          type: number
+          nullable: true
+          description: Present only in semantic search results (0-1)
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    NoteInput:
+      type: object
+      required: [title, content]
+      properties:
+        title: { type: string, maxLength: 255, example: 'Project kickoff' }
+        content: { type: string, example: 'We discussed the architecture and timeline.' }
+    NoteUpdateInput:
+      type: object
+      properties:
+        title: { type: string, maxLength: 255 }
+        content: { type: string }
+    PaginationMeta:
+      type: object
+      properties:
+        current_page: { type: integer, example: 1 }
+        per_page: { type: integer, example: 10 }
+        total: { type: integer, example: 42 }
+        last_page: { type: integer, example: 5 }
+    ValidationError:
+      type: object
+      properties:
+        message: { type: string, example: 'The title field is required.' }
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items: { type: string }
